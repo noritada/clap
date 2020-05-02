@@ -9,7 +9,7 @@ use std::{
 
 // Internal
 use crate::{
-    build::{Arg, ArgGroup},
+    build::Arg,
     output::fmt::Colorizer,
     parse::features::suggestions,
     util::{safe_exit, termcolor::ColorChoice},
@@ -438,55 +438,6 @@ impl Error {
 
         self.message.print().expect("Error writing Error to stdout");
         safe_exit(0)
-    }
-
-    #[allow(unused)] // requested by @pksunkara
-    pub(crate) fn group_conflict<O, U>(
-        group: &ArgGroup,
-        other: Option<O>,
-        usage: U,
-        color: ColorChoice,
-    ) -> io::Result<Self>
-    where
-        O: Into<String>,
-        U: Display,
-    {
-        let mut v = vec![group.name.to_owned()];
-        let mut c = Colorizer::new(true, color);
-
-        start_error(&mut c, "The argument '")?;
-        c.warning(group.name)?;
-        c.none("' cannot be used with ")?;
-
-        let cause = match other {
-            Some(name) => {
-                let n = name.into();
-                v.push(n.clone());
-
-                c.none("'")?;
-                c.warning(&*n)?;
-                c.none("'")?;
-
-                format!("The argument '{}' cannot be used with '{}'", group.name, n)
-            }
-            None => {
-                let n = "one or more of the other specified arguments";
-
-                c.none(n)?;
-
-                format!("The argument '{}' cannot be used with {}", group.name, n)
-            }
-        };
-
-        put_usage(&mut c, usage)?;
-        try_help(&mut c)?;
-
-        Ok(Error {
-            cause,
-            message: c,
-            kind: ErrorKind::ArgumentConflict,
-            info: Some(v),
-        })
     }
 
     pub(crate) fn argument_conflict<O, U>(
